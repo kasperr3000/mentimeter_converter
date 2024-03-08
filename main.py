@@ -1,28 +1,16 @@
 import sys
 import subprocess
-
-try:
-    from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QPushButton, QVBoxLayout, QRadioButton, \
-        QFileDialog
-except ImportError:
-    print("PyQt5 is not installed. Installing PyQt5 now...")
-    try:
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "PyQt5"])
-        print("PyQt5 has been successfully installed.")
-    except subprocess.CalledProcessError:
-        print("Failed to install PyQt5. Please install PyQt5 manually.")
-        sys.exit(1)
+import threading
+from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QPushButton, QVBoxLayout, QFileDialog
 
 
 def convert_text():
+    global input_entry, convert_button
     input_text = input_entry.text()
-    output_direction = output_direction_var
     output_location, _ = QFileDialog.getSaveFileName(None, "Save HTML File", "", "HTML Files (*.html)")
 
     if output_location:
         with open(output_location, "w") as file:
-            if output_direction == "Reverse":
-                input_text = input_text[::-1]
             html_content = f"""
             <!DOCTYPE html>
             <html lang="en">
@@ -38,13 +26,32 @@ def convert_text():
             """
             file.write(html_content)
 
+        # Provide visual feedback by changing button color to green and text to "Created!"
+        convert_button.setStyleSheet("background-color: green;")
+        convert_button.setText("Created!")
 
-# Press the green button in the gutter to run the script.
+        # Start a separate thread to reset the button after 2 seconds
+        threading.Thread(target=reset_button).start()
+
+        # Clear the input field
+        input_entry.clear()
+
+
+def reset_button():
+    global convert_button
+    import time
+    # Wait for 2 seconds
+    time.sleep(2)
+    # Reset button to its original state
+    convert_button.setStyleSheet("")
+    convert_button.setText("Create HTML File")
+
+
 if __name__ == '__main__':
     # Create the application instance
     app = QApplication(sys.argv)
 
-    # Create the main window
+    # Create the window
     window = QWidget()
     window.setWindowTitle("HTML File Creator")
 
@@ -55,22 +62,6 @@ if __name__ == '__main__':
     input_layout.addWidget(input_label)
     input_layout.addWidget(input_entry)
 
-    # Create output direction radio buttons
-    normal_radio = QRadioButton("Normal")
-    reverse_radio = QRadioButton("Reverse")
-    output_direction_var = "Normal"
-
-
-    def on_radio_button_clicked():
-        global output_direction_var
-        radio_button = window.sender()
-        if radio_button.isChecked():
-            output_direction_var = radio_button.text()
-
-
-    normal_radio.clicked.connect(on_radio_button_clicked)
-    reverse_radio.clicked.connect(on_radio_button_clicked)
-
     # Create convert button
     convert_button = QPushButton("Create HTML File")
     convert_button.clicked.connect(convert_text)
@@ -78,14 +69,12 @@ if __name__ == '__main__':
     # Arrange widgets in layout
     layout = QVBoxLayout()
     layout.addLayout(input_layout)
-    layout.addWidget(normal_radio)
-    layout.addWidget(reverse_radio)
     layout.addWidget(convert_button)
 
-    # Set the layout for the main window
+    # Set the layout for the window
     window.setLayout(layout)
 
-    # Show the main window
+    # Show the window
     window.show()
 
     # Start the application event loop
