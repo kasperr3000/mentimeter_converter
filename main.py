@@ -1,8 +1,18 @@
 import sys
 import subprocess
 import threading
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QPushButton, QVBoxLayout, QFileDialog
-
+# Check if PyQt5 is installed, if not, try to install it
+try:
+    from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QPushButton, QVBoxLayout, QFileDialog
+except ImportError:
+    print("PyQt5 is not installed. Installing PyQt5 now...")
+    try:
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "PyQt5"])
+        print("PyQt5 has been successfully installed.")
+        from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QPushButton, QVBoxLayout, QFileDialog
+    except subprocess.CalledProcessError:
+        print("Failed to install PyQt5. Please install PyQt5 manually.")
+        sys.exit(1)
 
 def convert_text():
     global input_entry, convert_button
